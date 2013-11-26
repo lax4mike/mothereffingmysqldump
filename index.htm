@@ -1,0 +1,252 @@
+<doctype html>
+<html>
+<head>
+	<title>Mother effing mysqldump</title>
+
+	<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+	
+	<style type="text/css">
+		@import url(http://fonts.googleapis.com/css?family=Open+Sans);
+
+			body {		
+				font-family: 'Open Sans', sans-serif;		
+				padding: 10px;
+				/*min-width: 960px;*/
+				margin: auto;
+			}
+
+			a[href='#'] {
+				color: #00e;
+			}
+
+			.table-wrapper {
+				max-width: 100%;
+				overflow-x: auto;
+			}
+			
+			code.inline {
+				display: inline-block;
+				margin: 0;
+				padding: 3px 10px;
+				box-shadow: none;
+				background: #eee;
+				color: black;
+				-moz-box-shadow: none;
+				-webkit-box-shadow: none;
+			}
+
+			
+			code {
+				font-family: monospace;
+				display: block;
+				background: #2d2d2d;
+				color: white;
+				padding: 10px;
+				margin: 5px 0 15px 10px;
+				overflow-x: auto;
+				
+				box-shadow: 3px 3px 0px #999;
+				-moz-box-shadow: 3px 3px 0px #999;
+				-webkit-box-shadow: 3px 3px 0px #999;
+			}
+
+			code .highlight {
+				font-weight: bold;
+				color: yellow;
+			}
+			
+			code.pre {
+				white-space: pre-wrap;
+			}
+
+			a.pre-defined {
+				display: inline-block;
+				background: #DFDFDF;
+				border: 1px solid #999;
+				border-radius: 5px;
+				color: #000;
+				padding: 0px 8px;
+				margin: 0 4px 4px 0;
+				text-decoration: none;
+				cursor: pointer;
+			}
+
+			a.pre-defined:hover {
+				border-color: black;
+			}
+
+			table th {
+				text-align: right;
+			}
+
+	</style>
+
+	<script type="application/json" id="pre-defineds-json">
+
+		[
+			{
+				"label": "Sample",
+				"host": "127.0.0.1",
+				"user": "root",
+				"pass": "yeehaw",
+				"db": "my_awesome_db",
+				"filename": ""
+			},
+			{
+				"label": "Another sample",
+				"host": "",
+				"user": "root",
+				"pass": "yeehaw",
+				"db": "another_awesome_db",
+				"filename": "db-backup-for-bob"
+			}
+
+		]
+
+	</script>
+
+	<script type="text/javascript">
+
+		(function(){
+
+			$.strPad = function(i,l,s) {
+				var o = i.toString();
+				if (!s) { s = '0'; }
+				while (o.length < l) {
+					o = s + o;
+				}
+				return o;
+			};
+
+			var fillItIn = function(fields){
+
+				$.each(fields, function(field, value){
+					$('#mysqldump-table .' + field).val(value);
+				});
+
+				$('#mysqldump-table input').each(function(i, input){
+					$(input).trigger('keyup');
+				})
+
+			}
+
+			$(document).ready(function(){
+
+				// load pre-defineds
+				var preDefineds = $.parseJSON($('#pre-defineds-json').html());
+				$(preDefineds).each(function(i, obj){
+
+					var link = $('<a class="pre-defined"></a>');
+					link.text(obj.label);
+					link.click(function(e) {
+						event.preventDefault();
+						fillItIn(obj);
+					});
+					$('#pre-defineds').append(link);
+
+				});
+
+				// keyup action
+				$('#mysqldump-table input').keyup(function(el){
+					var value = $(this).val();
+					var classname = $(this).attr('class');
+					//console.log(('.mysql-code .'+ classname));
+
+					// only show --host if there is a value for it
+					if (classname == "host" && value != "") {
+						value = "--host " + value;
+					}
+					// only show -u if there is a value for it
+					if (classname == "user" && value != "") {
+						value = "-u " + value;
+					}
+
+					$('.mysql-code .'+ classname).text(value);
+
+					// use db-date for the filename is none is given
+					if (classname == "filename" || classname == "db") {
+						var db = $('#mysqldump-table input.db').val();
+						var filename = $('#mysqldump-table input.filename').val();
+
+						if (filename == "" ){
+							if (db != "") {
+								var d = new Date();
+								db += "-" + d.getFullYear() + "-" + $.strPad(d.getMonth()+1, 2) + "-" + $.strPad(d.getDate(), 2) ;
+							}
+							$('.mysql-code .filename').text(db);
+						}
+						
+					}
+
+					
+				});
+
+				// clear the inputs
+				$('#clear').click(function(event) {
+					event.preventDefault();
+					fillItIn({'host': '','user': '','pass': '','db': '','filename': ''});
+				});
+
+				// remove definer from mysqldump
+				$('#definer').change(function(e){
+					$('.mysql-code .definer').toggle($('#definer').is(':checked'));
+				});
+				$('#definer').trigger('change');
+
+			});
+
+		})();
+	</script>
+</head>
+<body>
+	<div>
+		
+		<div style='overflow: auto;'>
+					
+			<table id='mysqldump-table' style='float: left ;margin-right: 20px;'>
+				<tr>
+					<th>Host</th>
+					<td><input type="text" class='host'></td>
+				</tr>
+				<tr>
+					<th>User</th>
+					<td><input type="text" class='user'></td>
+				</tr>
+				<tr>
+					<th>Pass</th>
+					<td><input type="text"  class='pass'></td>
+				</tr>
+				<tr>
+					<th>Databse</th>
+					<td><input type="text"  class='db'></td>
+				</tr>
+				<tr>
+					<th>Filename</th>
+					<td><input type="text" class='filename'></td>
+				</tr>
+				<tr>
+					<td colspan='2' style='text-align: right'>
+						<a href='#' id='clear'>clear</a>
+						<div><input type="checkbox" id='definer' checked> <label for="definer">remove definer</label></div>
+					</td>
+				</tr>
+			</table>
+
+			<div id='pre-defineds'>
+
+			</div>
+
+		</div>
+
+		<code class='mysql-code'>
+			mysql <span class='host'></span> <span class='user'></span> -p<span class='pass'></span> <span class='db'></span>
+		</code>
+
+		<code class='mysql-code'>
+			mysqldump --single-transaction --create-options <span class='host'></span> <span class='user'></span> -p<span class='pass'></span> <span class='db'></span> <span class='definer' style='display: none;'>| sed -e 's/DEFINER[ ]*=[ ]*[^*]*\*/\*/' </span>| gzip --best > <span class='filename'></span>.sql.gz
+		</code>
+
+	</div>
+
+</body>
+</html>
