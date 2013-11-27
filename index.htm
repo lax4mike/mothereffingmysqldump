@@ -1,4 +1,4 @@
-<doctype html>
+<!doctype html>
 <html>
 <head>
 	<title>Mother effing mysqldump</title>
@@ -11,7 +11,7 @@
 			body {		
 				font-family: 'Open Sans', sans-serif;		
 				padding: 10px;
-				/*min-width: 960px;*/
+				max-width: 960px;
 				margin: auto;
 			}
 
@@ -77,6 +77,59 @@
 
 			table th {
 				text-align: right;
+			}
+
+			#import-dialog {
+				position: fixed;
+				top: 20px;
+				left: 20px;
+				bottom: 20px;
+				right: 20px;
+				background: #dfdfdf;
+				padding: 0 20px;
+				border-radius: 6px;
+
+				display: flex;
+				flex-direction: column;
+			}
+			#import-dialog textarea {
+				flex-grow: 1;
+			}
+			#import-dialog .buttons {
+				text-align: right;
+				padding: 20px 0;
+			}
+			#import-dialog .buttons .button {
+				margin-left: 10px;
+			}
+			.button {
+				display: inline-block;
+				background: #ccc;
+				border: 1px solid hsl(0, 0%, 50%);
+				border-radius: 4px;
+				padding: 2px 10px;
+				cursor: pointer;
+			}
+			.button:hover {
+				background: #aaa;
+			}
+			
+			a.link {
+				font-size: .8em;
+				color: hsl(240, 75%, 50%);
+				text-decoration: underline;
+				cursor: pointer;
+			}
+			a.link:hover {
+				text-decoration: none;
+			}
+			#dim {
+				background: hsla(0, 0%, 0%, .5);
+				position: fixed;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
 			}
 
 	</style>
@@ -193,13 +246,32 @@
 				});
 				$('#definer').trigger('change');
 
+				// import
+				var closeDialog = function(event) {
+					$("#dim").fadeOut();
+					$("#import-dialog").fadeOut();
+				};
+
+				$('#import').click(function(event) {
+					$("#dim").show();
+					$("#import-dialog").fadeIn();
+				});
+				$("#import-dialog .cancel, #dim").click(closeDialog);
+
+
+				
+
+
 			});
 
 		})();
 	</script>
 </head>
 <body>
-	<div>
+
+	
+
+	<div class="container">
 		
 		<div style='overflow: auto;'>
 					
@@ -226,11 +298,14 @@
 				</tr>
 				<tr>
 					<td colspan='2' style='text-align: right'>
+						<a href='#' id='import'>import</a>
+
 						<a href='#' id='clear'>clear</a>
 						<div><input type="checkbox" id='definer' checked> <label for="definer">remove definer</label></div>
 					</td>
 				</tr>
 			</table>
+
 
 			<div id='pre-defineds'>
 
@@ -248,5 +323,18 @@
 
 	</div>
 
+	<div id="dim" style="display: none"></div>
+
+	<div id="import-dialog" style="display: none">
+		<h2>import</h2>
+		<div>paste valid json</div>
+		<textarea id="import-textarea"></textarea>
+		<div class='buttons'>
+			<a class="link cancel">cancel</a>
+			<div class="button import">import</div>
+		</div>
+	</div>
+
+	
 </body>
 </html>
